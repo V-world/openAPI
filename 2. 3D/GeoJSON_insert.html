@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport"
+          content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>GEOJSON_Insert</title>
+    <script type="text/javascript" src="https://map.vworld.kr/js/webglMapInit.js.do?version=2.0&apiKey="></script>
+    <script type="text/javascript" src="https://cesium.com/downloads/cesiumjs/releases/1.82/Build/Cesium/Cesium.js"></script>
+</head>
+<body>
+    <div id="vmap" style="width:1200px;height:750px;left:0px;top:0px"></div>
+    <script>
+        var mapOptions = new vw.MapOptions(
+            vw.BasemapType.GRAPHIC,
+            "",
+            vw.DensityType.FULL,
+            vw.DensityType.BASIC,
+            false,
+            new vw.CameraPosition(
+                new vw.CoordZ(-97, 38, 30000),
+                new vw.Direction(0, -45, 0)
+            ),
+            new vw.CameraPosition(
+                new vw.CoordZ(-97, 38, 30000),
+                new vw.Direction(0, -45, 0)
+            )
+        );
+        map = new vw.Map("vmap", mapOptions);
+
+        //3D지도 로드 완료시
+        vw.ws3dInitCallBack = function () {
+            ws3d.viewer.dataSources.add(
+                Cesium.GeoJsonDataSource.load(
+                    // 데이터 폴더내 GeoJson파일(cesium_ne_10m_us_states.topojson)의 출처는 아래와 같습니다.
+                    // https://sandcastle.cesium.com/SampleData/ne_10m_us_states.topojson
+                    "./Data/cesium_ne_10m_us_states.topojson",
+                    {
+                        stroke: Cesium.Color.HOTPINK,
+                        fill: Cesium.Color.PINK.withAlpha(0.5),
+                        strokeWidth: 3,
+                    }
+                )
+            );
+        };
+    </script>
+</body>
+</html>
