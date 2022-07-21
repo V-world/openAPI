@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>인천국제공항행 비행기</title>
+    <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+    <!--인증키 정보 가져오는 스크립트-->
+    <script type="text/javascript" src="../apikey.js"></script>
+    <script type="text/javascript" src="https://map.vworld.kr/js/webglMapInit.js.do?version=2.0&apiKey="></script>
+    <script type="text/javascript" src="https://cesium.com/downloads/cesiumjs/releases/1.82/Build/Cesium/Cesium.js"></script>
+</head>
+<body>
+    <div id="vmap" style="width:100%;height:750px;left:0px;top:0px"></div>
+    <button onclick="refreshs()">수동 새로고침</button>
+    <button onclick="autostop()">자동 새로고침 중단</button>
+    <div id="updated_at"></div>
+    <script type="text/javascript">
+
+        // apikey.js에서 airlabs의 인증키를 가져오기기
+       const airlabs = config.airlabs_key;
+
+        var mapOptions = new vw.MapOptions(
+                vw.BasemapType.GRAPHIC,
+                "",
+                vw.DensityType.FULL,
+                vw.DensityType.BASIC,
+                 false,
+                 new vw.CameraPosition(
+                    new vw.CoordZ(126.603, 37.460, 30000),
+                    new vw.Direction(0, -45, 0)
+                 ),
+                 new vw.CameraPosition(
+                    new vw.CoordZ(126.603, 37.460, 30000),
+                    new vw.Direction(0, -45, 0)
+                )
+
+        );
+        map = new vw.Map("vmap", mapOptions);
+
+        var oldAir = [];
+        var newAir = [];
+
+        function refreshs(){
+            newAir = []
+            loadair('reload')
+        }
+
+        function refreshModel( id, name, position, orientation ){
+            if (ws3d.viewer.entities.getById(id)) {
+                ws3d.viewer.entities.getById(id).position = position;
+                ws3d.viewer.entities.getById(id).orientation = orientation;
+            }else{
+                createModel( id, name, position, orientation )
+            }
+            newAir.push({
+                id: id,
+                position: position,
+                orientation: orientation
+            })
+        };
+
+        function createModel( id, name, position, orientation ){
+            if (name === 'A330' || name === 'A333'){
+                const entity = ws3d.viewer.entities.add({
+                    name: name,
+                    id: id,
+                    position: position,
+                    orientation: orientation,
+                    model: {
+                        uri: './Data/airplans/' + name + '.glb',
+                        minimumPixelSize: 128,
+                        maximumScale: 4500,
+                    },
+                });
+            }else{
+                const entity = ws3d.viewer.entities.add({
+                    name: name,
+                    id: id,
+                    position: position,
+                    orientation: orientation,
+                    model: {
+                        uri: './Data/airplans/Cesium_Air.glb',
+                        minimumPixelSize: 128,
+                        maximumScale: 4500,
+                    },
+                });
+                oldAir.push({
+                    id: id,
+                    position: position,
+                    orientation: orientation
+                })
+            }
+        }
+
+        function loadair(chk){
+            $.ajax({
+                url: 'https://airlabs.co/api/v9/flights',
+                data: {
+                    api_key: airlabs,
+                    arr_icao: 'RKSI', //도착공항이 인천공항인 경우
+                    size: '5',
+                },
+                dataType: 'json',
+                success: function(apiResponse) {
+                    test = apiResponse;
+                    if (Array.isArray(apiResponse['response'])){
+                        apiResponse['response'].forEach(flight => {
+                            const position = Cesium.Cartesian3.fromDegrees( flight['lng'], flight['lat'], flight['alt'] );
+                            const heading = Cesium.Math.toRadians( flight['dir']-90 ); //모델 회전
+                            const pitch = 0;//앞뒤 기울기
+                            const roll = 0;//좌우 기울기
+                            const hpr = new Cesium.HeadingPitchRoll( heading, pitch, roll );
+                            const orientation = Cesium.Transforms.headingPitchRollQuaternion( position, hpr );
+                            if(chk === 'new'){
+                                createModel(flight['reg_number'], flight['aircraft_icao'], position, orientation)
+                            }else{
+                                refreshModel(flight['reg_number'], flight['aircraft_icao'], position, orientation)
+                            }
+                        })
+                    }
+                    if (chk != 'new'){
+                        newAir.filter(x => !oldAir.includes(x)).forEach(a => {
+                            ws3d.viewer.entities.removeById(a)
+                        })
+                        oldAir = newAir
+                        $("#updated_at").html('새로고침 완료 시간 : ' + new Date());
+                    };
+                },
+            });
+        }
+
+        vw.ws3dInitCallBack = function() {
+            loadair('new')
+        };
+
+        let autostart = setInterval(function (){
+            refreshs()
+        },10000)
+
+        function autostop(){
+            clearTimeout(autostart)
+        }
+    </script>
+    </body>
+</html>
