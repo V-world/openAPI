@@ -1,0 +1,39 @@
+.lists .button-group {
+	-webkit-justify-content: center;
+	-ms-flex-pack: center;
+	justify-content: center;
+}
+
+.svname{
+	margin-top: 10px;
+	text-align: center;
+	border: 1px solid #BDBDBD;
+}
+
+.imgsize {
+	height: 180px;
+	width: 180px;
+}
+
+.lists-item{
+	text-align: center;
+}
+
+
+.lists .lists-button.hollow.is-active, .lists .lists-button.hollow:focus, .lists .lists-button.hollow:active {
+	background-color: #1779ba;
+	color: #fefefe;
+}
+
+.button-group.round :first-child {
+	border-radius: 5000px 0 0 5000px;
+}
+
+.button-group.round :last-child {
+	border-radius: 0 5000px 5000px 0;
+}
+
+.column-block {
+	margin-bottom: 30px;
+}
+
