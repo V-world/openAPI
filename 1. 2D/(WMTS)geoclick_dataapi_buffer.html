@@ -39,9 +39,31 @@
         view: olView
     });//
 
+    //WMS 지도에 호출하기
+    let wms_title = '관광지';
+    let wms_val = 'lt_c_uo601';
+
+    let wms_tile = new ol.layer.Tile({
+        name : "WMS_LAYER",
+        source : new ol.source.TileWMS({
+            url : "http://api.vworld.kr/req/wms?",
+            params : {
+                LAYERS : wms_val,
+                STYLES : wms_val,
+                CRS : "EPSG:900913",
+                apikey : vworldkey,
+                title : wms_title,
+                FORMAT : "image/png",
+            }
+        })
+    });
+    map.addLayer(wms_tile);
+
+
+    //클락한 곳으로 부터 반경 30 내의 데이터 목록 호출
     map.on("click", function(evt) {
         let coordinate = evt.coordinate
-        $('#chk').html('http://api.vworld.kr/req/data?service=data&request=GetFeature&data=LT_C_UO601&key='+vworldkey+'&CRS=EPSG:3857&geomFilter=point('+coordinate[0]+' '+coordinate[1]+')&buffer=30')
+        $('#chk').html('http://api.vworld.kr/req/data?service=data&request=GetFeature&data='+wms_val+'&key='+vworldkey+'&CRS=EPSG:3857&geomFilter=point('+coordinate[0]+' '+coordinate[1]+')&buffer=30')
     });
 
 
