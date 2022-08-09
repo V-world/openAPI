@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport"
+          content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>GEOJSON_Insert</title>
+    <script type="text/javascript" src="https://map.vworld.kr/js/webglMapInit.js.do?version=2.0&apiKey="></script>
+    <script type="text/javascript"
+            src="https://cesium.com/downloads/cesiumjs/releases/1.82/Build/Cesium/Cesium.js"></script>
+</head>
+<body>
+<div id="vmap" style="width:1200px;height:750px;left:0px;top:0px"></div>
+<script>
+    var mapOptions = new vw.MapOptions(
+        vw.BasemapType.GRAPHIC,
+        "",
+        vw.DensityType.FULL,
+        vw.DensityType.BASIC,
+        false,
+        new vw.CameraPosition(
+            new vw.CoordZ(-97, 38, 30000),
+            new vw.Direction(0, -45, 0)
+        ),
+        new vw.CameraPosition(
+            new vw.CoordZ(-97, 38, 30000),
+            new vw.Direction(0, -45, 0)
+        )
+    );
+    map = new vw.Map("vmap", mapOptions);
+
+    //3D지도 로드 완료시
+    vw.ws3dInitCallBack = function () {
+        Cesium.Math.setRandomNumberSeed(0);
+
+        const promise = Cesium.GeoJsonDataSource.load(
+            "./Data/cesium_ne_10m_us_states.topojson"
+        );
+        promise
+            .then(function (dataSource) {
+                ws3d.viewer.dataSources.add(dataSource);
+
+                //Get the array of entities
+                const entities = dataSource.entities.values;
+
+                const colorHash = {};
+                for (let i = 0; i < entities.length; i++) {
+                    //For each entity, create a random color based on the state name.
+                    //Some states have multiple entities, so we store the color in a
+                    //hash so that we use the same color for the entire state.
+                    const entity = entities[i];
+                    const name = entity.name;
+                    let color = colorHash[name];
+                    if (!color) {
+                        color = Cesium.Color.fromRandom({
+                            alpha: 1.0,
+                        });
+                        colorHash[name] = color;
+                    }
+
+                    //Set the polygon material to our random color.
+                    entity.polygon.material = color;
+                    //Remove the outlines.
+                    entity.polygon.outline = false;
+
+                    //Extrude the polygon based on the state's population.  Each entity
+                    //stores the properties for the GeoJSON feature it was created from
+                    //Since the population is a huge number, we divide by 50.
+                    entity.polygon.extrudedHeight =
+                        entity.properties.Population / 50.0;
+                }
+            })
+            .catch(function (error) {
+                //Display any errrors encountered while loading.
+                window.alert(error);
+            });
+    }
+</script>
+</body>
+</html>``
