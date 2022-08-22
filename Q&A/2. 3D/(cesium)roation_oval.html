@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport"
+          content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>GEOJSON_Insert</title>
+    <script type="text/javascript" src="https://map.vworld.kr/js/webglMapInit.js.do?version=2.0&apiKey="></script>
+    <script type="text/javascript"
+            src="https://cesium.com/downloads/cesiumjs/releases/1.82/Build/Cesium/Cesium.js"></script>
+</head>
+<body>
+<div id="vmap" style="width:1200px;height:750px;left:0px;top:0px"></div>
+<script>
+    var mapOptions = new vw.MapOptions(
+        vw.BasemapType.GRAPHIC,
+        "",
+        vw.DensityType.FULL,
+        vw.DensityType.BASIC,
+        false,
+        new vw.CameraPosition(
+            new vw.CoordZ(-97, 38, 30000),
+            new vw.Direction(0, -45, 0)
+        ),
+        new vw.CameraPosition(
+            new vw.CoordZ(-97, 38, 30000),
+            new vw.Direction(0, -45, 0)
+        )
+    );
+    map = new vw.Map("vmap", mapOptions);
+
+    //3D지도 로드 완료시
+    vw.ws3dInitCallBack = function () {
+        const viewer = ws3d.viewer;
+        const entities = ws3d.viewer.entities;
+
+        entities.add({
+            position: Cesium.Cartesian3.fromDegrees(-117.0, 35.0),
+            ellipse: {
+                semiMinorAxis: 100000.0,
+                semiMajorAxis: 200000.0,
+                height: 100000.0,
+                extrudedHeight: 200000.0,
+                rotation: Cesium.Math.toRadians(90.0),
+            },
+        });
+        entities.add({
+            position: Cesium.Cartesian3.fromDegrees(-110.0, 35.0),
+            ellipse: {
+                semiMinorAxis: 100000.0,
+                semiMajorAxis: 200000.0,
+                height: 300000.0,
+                extrudedHeight: 700000.0,
+                rotation: Cesium.Math.toRadians(-40.0),
+            },
+        });
+        viewer.zoomTo(viewer.entities);
+    };
+</script>
+</body>
+</html>``
