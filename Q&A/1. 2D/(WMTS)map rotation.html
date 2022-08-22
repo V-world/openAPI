@@ -42,7 +42,7 @@
 
     function roationgo(){
         var pro = map.getView().getProperties();
-        pro['rotation'] = Math.PI/12
+        pro['rotation'] -= Math.PI/12
         map.setView(new ol.View(pro));
     }
 </script>
