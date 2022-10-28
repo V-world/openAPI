@@ -1,0 +1,100 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport"
+          content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>GEOJSON_Insert</title>
+    <script type="text/javascript" src="https://map.vworld.kr/js/webglMapInit.js.do?version=2.0&apiKey=[인증키]"></script>
+</head>
+<body>
+<div id="vmap" style="width:1200px;height:750px;left:0px;top:0px"></div>
+<script>
+    var mapOptions = new vw.MapOptions(
+        vw.BasemapType.GRAPHIC,
+        "",
+        vw.DensityType.FULL,
+        vw.DensityType.BASIC,
+        false,
+        new vw.CameraPosition(
+            new vw.CoordZ(127.05230621275187,37.527289540306924, 216),
+            new vw.Direction(0, -45, 0)
+        ),
+        new vw.CameraPosition(
+            new vw.CoordZ(127.05230621275187,37.527289540306924, 216),
+            new vw.Direction(0, -45, 0)
+        )
+    );
+    map = new vw.Map("vmap", mapOptions);
+
+    var wfsEvent = function(windowPosition, ecefPosition, cartographic, featureInfo, event) {
+        var mh = getBuffer(cartographic.longitudeDD,cartographic.latitudeDD);
+        let min = [cartographic.longitudeDD-mh[0],cartographic.latitudeDD-mh[1]]
+        let max = [cartographic.longitudeDD+mh[0],cartographic.latitudeDD+mh[1]]
+        let box = min[0]+","+min[1]+","+max[0]+","+max[1]
+        var url = `https://api.vworld.kr/req/wfs?key=[인증키]&SERVICE=WFS&version=1.1.0&request=GetFeature&TYPENAME=lp_pa_cbnd_bubun&OUTPUT=application/json&SRSNAME=EPSG:4326&BBOX=${box}`;
+        url = "https://map.vworld.kr/proxy.do?url=" + encodeURIComponent(url);
+        // parser 설명.
+        // parser 생성자.
+        var parser = new vw.GMLParser();
+        parser.setId("aaaa");//아이디 부여
+        //var featureInfos = parser.readTemp(vw.GMLParserType.GEOJSON, url, "EPSG:900913");
+        // data 읽기. parser.read( 데이터타입, 데이터경로, 데이터좌표계)
+        // 전달되는 좌표계를 의미하며, 이 좌표를 웹지엘에서는 EPSG:4326으로 변환하여 사용합니다.
+        // 데이터타입. vw.GMLParserType { GEOJSON, GML1, GML2, GML2 }
+        featureInfos = parser.read(vw.GMLParserType.GEOJSON, url, "EPSG:4326");
+        console.log("featureInfos :" , featureInfos);
+        var options =         {
+            isTerrain : true,    // 지형 따라 출력시 true, 지면에서 위로 출력시 false
+            width : 50,      // 선의 경우 크기지정.
+            material : new vw.Color(0,255,0,255).ws3dColor.withAlpha(0.2),  // RGBA A값만 255이하로 주면 투명 또는 withAlpha(1.0~0.1)로 설정.
+            outline : true,      // 아웃라인지정시 true, 아웃라인 미지정 false
+            outlineWidth : 5,    // 아웃라인 너비.
+            outlineColor : vw.Color.YELLOW.ws3dColor,    // 아웃라인 색상.
+            clampToGround : true,    // 적용이 안되는 것 같습니다.
+            height : 1600.0
+        };
+        // 출력 색상등 지정.
+        featureInfos.setOption(options);
+        // Point의 경우 이미지 설정. options 항목이 필요없음.
+        //featureInfos.setImage("https://map.vworld.kr/images/comm/symbol_05.png");
+        // 출력 좌표 설정.
+        featureInfos.makeCoords();//생성
+        featureInfos.show(); //뷰
+    };
+
+    //대략적인 마우스 클릭 크기에 맞는 BBOX 영역 계산
+    var getBuffer = function(x,y){
+        position = map.getCurrentPosition().position
+        // var x = position.x
+        // var y = position.y
+        var z = position.z
+        //111,000KM  1도 단위
+        var m = 1/(111000/z*1.48*50);
+        var h = 1/(111000/z*1.85*50);
+        return [m,h];
+    }
+
+
+    //3D지도 로드 완료시
+    vw.ws3dInitCallBack = function () {
+        map.getLayerElement("facility_build").hide()
+        var wmsLayer = new vw.Layers();
+        wmsSource = new vw.source.TileWMS();
+        wmsSource.setParams("tilesize=256");
+        wmsSource.setLayers("LP_PA_CBND_BUBUN,LP_PA_CBND_BONBUN".toLowerCase());
+        wmsSource.setStyles("LP_PA_CBND_BUBUN_WEBGL,LP_PA_CBND_BONBUN_WEBGL".toLowerCase());
+        wmsSource.setFormat("image/png");
+        wmsSource.setUrl("https://api.vworld.kr/req/wms?Key=[인증키]");
+        var wmsTile = new vw.layer.Tile(wmsSource);
+        wmsLayer.add(wmsTile);
+
+        map.onClick.addEventListener(wfsEvent);
+
+        // 이벤트 지우기
+        // map.onClick.removeEventListener(wfsEvent)
+    };
+</script>
+</body>
+</html>``
